@@ -4,11 +4,11 @@ import {
   validateAdminCreate,
   validateAdminLogin,
 } from "../validators/adminValidators.js";
-import { validateRequest } from "../middleware/validateRequest.js";
+import { validateRequest } from "../utils/validateRequest.js";
 
 const router = Router();
 
 router.post("/login", validateAdminLogin, validateRequest, login);
-router.post("create", validateAdminCreate, validateRequest, createAdmin);
+router.post("/create", validateAdminCreate, validateRequest, createAdmin);
 
 export default router;

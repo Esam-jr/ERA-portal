@@ -35,15 +35,28 @@ export const login = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    return res.json({ ok: true });
+    return res.json({ message: "Logedin Successfully", ok: true });
   } catch (e) {
     console.error(e);
     return res.status(500).json({ error: "Login failed" });
   }
 };
 
-export const createAdmin = async (name, email, password) => {
+export const createAdmin = async (req, res) => {
   try {
+    const { name, email, password } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: "All fields are required" });
+    }
+    const existingAdmin = await Admin.findOne({
+      email: String(email).toLowerCase().trim(),
+    });
+    if (existingAdmin) {
+      return res
+        .status(409)
+        .json({ error: "Admin with this email already exists" });
+    }
     const hashedPassword = await bcrypt.hash(password, 10);
     const admin = new Admin({
       name,
@@ -51,7 +64,9 @@ export const createAdmin = async (name, email, password) => {
       password: hashedPassword,
     });
     await admin.save();
-    return admin;
+    return res
+      .status(201)
+      .json({ message: "Admin created", adminId: admin._id });
   } catch (error) {
     console.error("Error creating admin:", error);
     throw new Error("Failed to create admin");

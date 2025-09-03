@@ -11,13 +11,13 @@ const AdminSchema = new Schema(
       required: true,
     },
     email: { type: String, required: true, unique: true, index: true },
-    passwordHash: { type: String, required: true },
+    password: { type: String, required: true },
   },
   { timestamps: { createdAt: true, updatedAt: false } }
 );
 
 AdminSchema.methods.verifyPassword = async function (plain) {
-  return compare(plain, this.passwordHash);
+  return compare(plain, this.password);
 };
 const Admin = models.Admin || model("Admin", AdminSchema);
 
