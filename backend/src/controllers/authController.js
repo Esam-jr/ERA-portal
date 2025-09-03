@@ -4,7 +4,7 @@ import Admin from "../models/admin.js";
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev_jwt_secret_change_me";
 
-const login = async (req, res) => {
+export const login = async (req, res) => {
   try {
     const { email, password } = req.body || {};
 
@@ -42,4 +42,18 @@ const login = async (req, res) => {
   }
 };
 
-export default login;
+export const createAdmin = async (name, email, password) => {
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const admin = new Admin({
+      name,
+      email: String(email).toLowerCase().trim(),
+      password: hashedPassword,
+    });
+    await admin.save();
+    return admin;
+  } catch (error) {
+    console.error("Error creating admin:", error);
+    throw new Error("Failed to create admin");
+  }
+};

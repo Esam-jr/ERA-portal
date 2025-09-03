@@ -1,8 +1,14 @@
 import { Router } from "express";
-import login from "../controllers/authController.js";
+import { createAdmin, login } from "../controllers/authController.js";
+import {
+  validateAdminCreate,
+  validateAdminLogin,
+} from "../validators/adminValidators.js";
+import { validateRequest } from "../middleware/validateRequest.js";
 
 const router = Router();
 
-router.post("/login", login);
+router.post("/login", validateAdminLogin, validateRequest, login);
+router.post("create", validateAdminCreate, validateRequest, createAdmin);
 
 export default router;
