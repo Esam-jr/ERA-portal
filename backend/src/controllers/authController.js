@@ -72,3 +72,37 @@ export const createAdmin = async (req, res) => {
     throw new Error("Failed to create admin");
   }
 };
+
+export const getAdmins = async (req, res) => {
+  try {
+    const admins = await Admin.find({}, "-password").sort({ createdAt: -1 });
+
+    return res.json({ admins });
+  } catch (error) {
+    console.error("Error fetching admins:", error);
+    return res.status(500).json({ error: "Failed to fetch admins" });
+  }
+};
+
+export const deleteAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ error: "Admin ID is required" });
+    }
+
+    const admin = await Admin.findById(id);
+
+    if (!admin) {
+      return res.status(404).json({ error: "Admin not found" });
+    }
+
+    await Admin.findByIdAndDelete(id);
+
+    return res.json({ message: "Admin deleted successfully", adminId: id });
+  } catch (error) {
+    console.error("Error deleting admin:", error);
+    return res.status(500).json({ error: "Failed to delete admin" });
+  }
+};
