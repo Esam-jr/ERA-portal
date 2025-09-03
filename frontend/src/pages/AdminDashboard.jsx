@@ -1,69 +1,104 @@
-import React, { useEffect, useState } from "react";
-
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import AdminNavbar from "../components/AdminNavbar";
+import ExportButtons from "../components/ExportButtons";
+import FeedbackTable from "../components/FeedbackTable";
+import AdminManagement from "../components/AdminManagement";
+import DepartmentManagement from "../components/DepartmentManagement";
+// Main Component
 export default function AdminDashboard() {
+  const [activeTab, setActiveTab] = useState("Feedbacks");
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    let active = true;
-    (async () => {
+    const fetchFeedback = async () => {
       try {
-        const res = await fetch(`/api/feedback?page=1&limit=20`, {
-          credentials: "include",
+        const response = await axios.get(`/api/feedback?page=1&limit=20`, {
+          withCredentials: true,
         });
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.error || `Failed (${res.status})`);
-        }
-        const data = await res.json();
-        if (active) setItems(data.items || []);
-      } catch (e) {
-        if (active) setError(e.message || "Failed to load");
+        setItems(response.data.items || response.data || []);
+      } catch (error) {
+        setError(error.response?.data?.error || "Failed to load feedback");
       } finally {
-        if (active) setLoading(false);
+        setLoading(false);
       }
-    })();
-    return () => {
-      active = false;
     };
-  }, []);
+
+    if (activeTab === "Feedbacks") {
+      fetchFeedback();
+    }
+  }, [activeTab]);
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case "Feedbacks":
+        return (
+          <>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+              <h2 className="text-2xl font-bold text-gray-800">
+                Feedbacks Management
+              </h2>
+              <ExportButtons data={items} />
+            </div>
+            <FeedbackTable data={items} loading={loading} />
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mt-4">
+                {error}
+              </div>
+            )}
+          </>
+        );
+      case "Admin Management":
+        return <AdminManagement />;
+      case "Departments":
+        return <DepartmentManagement />;
+      default:
+        return null;
+    }
+  };
 
   return (
-    <main className="max-w-6xl mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-semibold">Admin Dashboard</h1>
-      </div>
+    <div className="min-h-screen bg-gray-50">
+      <AdminNavbar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-      {loading && <p>Loading…</p>}
-      {error && <p className="text-red-600">{error}</p>}
+      <main className="max-w-6xl mx-auto px-4 py-8">{renderContent()}</main>
 
-      {!loading && !error && (
-        <div className="overflow-x-auto border rounded-xl bg-white">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="text-left p-3">Submitted</th>
-                <th className="text-left p-3">Branch</th>
-                <th className="text-left p-3">Sector</th>
-                <th className="text-left p-3">Gender</th>
-                <th className="text-left p-3">Age</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((f) => (
-                <tr key={f._id} className="border-t">
-                  <td className="p-3">{new Date(f.createdAt).toLocaleString()}</td>
-                  <td className="p-3">{f.section1?.branchName}</td>
-                  <td className="p-3">{f.section1?.sector}</td>
-                  <td className="p-3">{f.section1?.gender}</td>
-                  <td className="p-3">{f.section1?.age}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {/* Mobile Bottom Navigation */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg">
+        <div className="grid grid-cols-3 h-16">
+          {["Feedbacks", "Admin", "Depts"].map((tab, index) => (
+            <button
+              key={tab}
+              onClick={() =>
+                setActiveTab(
+                  tab === "Feedbacks"
+                    ? "Feedbacks"
+                    : tab === "Admin"
+                    ? "Admin Management"
+                    : "Departments"
+                )
+              }
+              className={`flex flex-col items-center justify-center text-xs ${
+                activeTab ===
+                (tab === "Feedbacks"
+                  ? "Feedbacks"
+                  : tab === "Admin"
+                  ? "Admin Management"
+                  : "Departments")
+                  ? "text-blue-600"
+                  : "text-gray-600"
+              }`}
+            >
+              <span className="text-lg mb-1">
+                {tab === "Feedbacks" ? "📋" : tab === "Admin" ? "👨‍💼" : "🏢"}
+              </span>
+              {tab}
+            </button>
+          ))}
         </div>
-      )}
-    </main>
+      </div>
+    </div>
   );
 }
