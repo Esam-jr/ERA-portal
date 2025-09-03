@@ -1,0 +1,31 @@
+import React from "react";
+import { Link, NavLink } from "react-router-dom";
+
+export default function Navbar() {
+  return (
+    <header className="sticky top-0 z-10 bg-white/80 backdrop-blur border-b">
+      <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="h-8 w-8 rounded bg-emerald-600" aria-hidden />
+          <Link to="/" className="text-lg font-semibold">ERA Feedback</Link>
+        </div>
+        <nav className="flex items-center gap-4">
+          <NavLink
+            to="/submit"
+            className={({ isActive }) =>
+              `px-3 py-1.5 rounded-lg border ${isActive ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-white hover:bg-gray-50'}`
+            }
+          >
+            Submit
+          </NavLink>
+          <Link
+            to="/admin/login"
+            className="px-4 py-2 rounded-lg bg-gray-900 text-white hover:bg-black"
+          >
+            Admin
+          </Link>
+        </nav>
+      </div>
+    </header>
+  );
+}
