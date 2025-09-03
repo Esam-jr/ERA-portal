@@ -4,6 +4,7 @@ import {
   deleteAdmin,
   getAdmins,
   login,
+  logout,
 } from "../controllers/authController.js";
 import {
   validateAdminCreate,
@@ -28,5 +29,6 @@ router.post(
 router.get("/list", requireAuth, requireSuperAdmin, getAdmins);
 
 router.delete("/:id", requireAuth, requireSuperAdmin, deleteAdmin);
+router.post("/logout", logout);
 
 export default router;

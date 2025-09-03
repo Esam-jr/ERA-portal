@@ -106,3 +106,17 @@ export const deleteAdmin = async (req, res) => {
     return res.status(500).json({ error: "Failed to delete admin" });
   }
 };
+
+export const logout = (req, res) => {
+  try {
+    res.clearCookie("token", {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+    });
+    return res.json({ message: "Logged out successfully", ok: true });
+  } catch (err) {
+    console.error("Logout error:", err);
+    return res.status(500).json({ error: "Failed to logout" });
+  }
+};
