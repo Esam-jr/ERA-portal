@@ -1,4 +1,6 @@
 import jwt from "jsonwebtoken";
+import Admin from "../models/admin.js";
+
 const { verify } = jwt;
 const JWT_SECRET = process.env.JWT_SECRET || "dev_jwt_secret_change_me";
 
@@ -24,8 +26,7 @@ export const requireSuperAdmin = async (req, res, next) => {
     const admin = await Admin.findById(req.adminId);
     if (!admin) return res.status(401).json({ error: "Unauthorized" });
 
-    // Here you can mark a field `isSuperAdmin` in your Admin model
-    // For now, we consider the first admin in DB as superadmin
+    // we consider the first admin in DB as superadmin
     const firstAdmin = await Admin.findOne().sort({ createdAt: 1 });
 
     if (admin._id.toString() !== firstAdmin._id.toString()) {
