@@ -1,4 +1,6 @@
 import React, { useMemo, useState } from "react";
+import axios from "axios";
+import { toast } from "react-hot-toast";
 
 const genders = [
   { value: "male", label: "Male / ወንድ" },
@@ -301,18 +303,15 @@ export default function EraFeedbackForm() {
       section4: { problems, suggestions, additionalComment },
       submittedAt: new Date().toISOString(),
     };
+
     try {
-      const res = await fetch("/api/feedback", {
-        method: "POST",
+      await axios.post("/api/feedback", payload, {
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(payload),
+        withCredentials: true,
       });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || `Request failed with ${res.status}`);
-      }
-      alert("Thank you! Your feedback has been submitted.");
+
+      toast.success("Thank you! Your feedback has been submitted.");
+
       // Reset form
       setStep(1);
       setGen({
@@ -343,7 +342,7 @@ export default function EraFeedbackForm() {
       setAdditionalComment("");
     } catch (err) {
       console.error(err);
-      alert(err.message || "Failed to submit feedback");
+      toast.error(err.response?.data?.error || "Failed to submit feedback");
     } finally {
       setSubmitting(false);
     }
