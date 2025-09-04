@@ -14,7 +14,7 @@ const feedbackLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
 
 router.post("/", feedbackLimiter, create);
 
-router.get("/", requireAuth, list);
+router.get("/list", requireAuth, list);
 router.get("/:id", requireAuth, getById);
 router.delete("/:id", requireAuth, deleteById);
 

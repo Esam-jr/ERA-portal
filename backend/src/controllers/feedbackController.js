@@ -126,7 +126,10 @@ export const list = async (req, res) => {
 export const getById = async (req, res) => {
   try {
     const item = await Feedback.findById(req.params.id);
-    if (!item) return res.status(404).json({ error: "Not found" });
+    if (!item)
+      return res
+        .status(404)
+        .json({ error: "Not found", message: "Item Not found" });
     return res.json(item);
   } catch (e) {
     console.error(e);
