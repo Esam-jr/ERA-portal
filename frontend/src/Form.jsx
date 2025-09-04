@@ -1,23 +1,5 @@
 import React, { useMemo, useState } from "react";
 
-/**
- * Ethiopian Revenues Authority (ERA) — Customer Feedback Portal
- * Technology: React + TailwindCSS (no external UI deps)
- *
- * Features
- * - 4-step wizard mapped to the Amharic paper form sections
- * - Mobile-first, accessible widgets (radios, selects) with labels
- * - Two large tables rendered as responsive cards on small screens
- * - Data structure mirrors original form for easy backend mapping
- * - Simple client-side validation & progress indicator
- *
- * How to use in your app
- * - Ensure Tailwind is configured in your project
- * - Drop this component anywhere and render <EraFeedbackForm />
- * - Wire the onSubmit handler to your API
- */
-
-// ---------- Dictionaries & Static Options ----------
 const genders = [
   { value: "male", label: "Male / ወንድ" },
   { value: "female", label: "Female / ሴት" },
@@ -96,7 +78,7 @@ const servicesCatalog = [
     name: "Electronic tax declaration & payment support (eTax)",
     am: "በኤ-ታክስ ማስታወቅና ክፍያ ድጋፍ",
     office: "104",
-    standard: "—",
+    standard: "2 working days",
   },
   {
     id: 2,
@@ -220,21 +202,21 @@ const servicesCatalog = [
 ];
 
 const transparencyStatements = [
-  "Service procedures are brief and clear.",
-  "Decisions and services are lawful and fair.",
-  "Technology (e.g., SIGTAS) strongly supports service delivery.",
-  "Electronic methods (eTax) reduce taxpayer burden.",
-  "Staff serve with honesty, respect and accountability.",
-  "Staff have adequate tax knowledge and experience.",
-  "Staff provide prompt responses to inquiries.",
-  "Staff maintain proper professional conduct (appearance, badge, grooming).",
-  "Staff respect official working hours.",
-  "Professionals/managers are accessible and willing to explain.",
-  "Taxpayer education is provided adequately by identifying gaps.",
-  "It’s easy to reach the responsible person for a case.",
-  "Management and staff show initiative to assist taxpayers.",
-  "Management and staff are free from corruption/unethical practices.",
-  "Premises are relatively convenient (building, reception, parking, etc.).",
+  "የቅ/ጽ/ቤት  አገልግሎት ለመስጠት የዘረጋቸው አሰራሮች አጭር እና ግልፅ ናቸው፡፡ / Service procedures are brief and clear.",
+  "የቅ/ጽ/ቤት የሚሰጣቸው ውሳኔዎች እና አገልግሎቶች ህግን የተከተሉና ፍትሃዊነትን የተላበሱ ናቸው፡፡ / Decisions and services are lawful and fair.",
+  "የቅ/ጽ/ቤት የሚጠቀምበት የቴክኖሎጂ ሥርዓት  (ለምሳሌ ሲግታስ) አገልግሎት ለማሳለጥ ከፍተኛ እገዛ አድርጓል፡፡ / Technology (e.g., SIGTAS) strongly supports service delivery.",
+  "የቅ/ጽ/ቤት  ታክስን በኤሌክትሮኒክስ ዘዴ (በኢታክስ) የማሳወቅ እና የመክፈል ዘዴን ስራ ላይ በማዋሉ የታክስ ከፋዩን ጫና እያቃለለ ይገኛል (በኢታክስ ተጠቃሚዎች የሚሞላ)፡፡ / Electronic methods (eTax) reduce taxpayer burden.",
+  "የቅ/ጽ/ቤት  ሠራተኞች በቅንነት፣ በአክብሮት እና በተጠያቂነት መንፈስ እያገለገሉ ናቸው፡፡ / Staff serve with honesty, respect and accountability.",
+  "የቅ/ጽ/ቤት ሠራተኞች በታክስ ጉዳዮች ዙሪያ በቂ እውቀት እና ልምድ አላቸው፡፡ / Staff have adequate tax knowledge and experience.",
+  "የቅ/ጽ/ቤት ሰራተኞች ከተገልጋዮች ለሚቀርቡ ጥያቄዎች ፈጣን ምላሽ ይሰጣሉ፡፡ / Staff provide prompt responses to inquiries.",
+  "የቅ/ጽ/ቤት ሠራተኞች ተገቢውን ስነ - ምግባር በማሟላት (በአለባበስ፣ በጸጉር አያያዝ፣ ባጅ በመልበስ፣ ወዘተ.) አገልግሎት ይሰጣሉ፡፡ / Staff maintain proper professional conduct (appearance, badge, grooming).",
+  "የቅ/ጽ/ቤት ሠራተኞች የመንግስት የስራ ሰዓት ያከብራሉ፡፡ / Staff respect official working hours.",
+  "በደረጃው ያሉ የቅ/ጽ/ቤት ባለሙያዎች እና የስራ ኃላፊዎች መረጃዎችና ማብራሪያዎችን ለመስጠት ተደራሽና ፈቃደኛ  ናቸው፡፡Professionals/managers are accessible and willing to explain.",
+  "የቅ/ጽ/ቤት የታክስ ከፋዮችን ክፍተት በመለየት በቂ ትምህርት እየሰጠ ይገኛል፡፡ / Taxpayer education is provided adequately by identifying gaps.",
+  "የቅ/ጽ/ቤት ተገልጋዩ ጉዳዩ የሚመለከተውን አካል /ሰው/ በቀላሉ ማግኘት የሚያስችል አሠራር አለው፡፡ / It’s easy to reach the responsible person for a case.",
+  "የቅ/ጽ/ቤት ኃላፊዎችና ሰራተኞች ተገልጋዩን ለማገዝ ተነሳሽነት አላቸው፡፡ / Management and staff show initiative to assist taxpayers.",
+  "የቅ/ጽ/ቤት ኃላፊዎችና ሰራተኞች ከአድሏዊ አሰራርና ከሙስና የጸዱ ናቸው፡፡  / Management and staff are free from corruption/unethical practices.",
+  "የቅ/ጽ/ቤት ተገልጋዮችን ለማስተናገድ የሚያስችል በአንጻራዊነት ምቹ የስራ ቦታ (ህንፃ፣ እንግዳ ማረፊያ፣ ፓርኪንግ፣ ወዘተ.) አለው፡፡Premises are relatively convenient (building, reception, parking, etc.).",
 ];
 
 // ---------- Utils ----------
@@ -286,7 +268,7 @@ export default function EraFeedbackForm() {
   const progress = useMemo(() => (step / 4) * 100, [step]);
 
   const validateStep = () => {
-    // light validation for demo; tighten as needed
+    // light validation
     if (step === 1) {
       const required = [
         gen.gender,
@@ -348,7 +330,13 @@ export default function EraFeedbackForm() {
         roleOther: "",
         branchName: "",
       });
-      setSvc(servicesCatalog.map((s) => ({ id: s.id, timeVsStandard: "", satisfaction: 0 })));
+      setSvc(
+        servicesCatalog.map((s) => ({
+          id: s.id,
+          timeVsStandard: "",
+          satisfaction: 0,
+        }))
+      );
       setLikert(transparencyStatements.map(() => 0));
       setProblems(["", "", ""]);
       setSuggestions(["", "", ""]);
@@ -366,7 +354,11 @@ export default function EraFeedbackForm() {
       <header className="sticky top-0 z-10 backdrop-blur bg-white/75 border-b">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded bg-emerald-600" aria-hidden />
+            <img
+              src="/logo.png"
+              alt="Ethiopian Revenues and Customs Authority"
+              className="h-10 w-10 object-contain"
+            />
             <div>
               <h1 className="text-lg font-semibold leading-tight">
                 ERA Feedback Portal / የግብር አገልግሎት መረጃ መሙያ
@@ -385,7 +377,7 @@ export default function EraFeedbackForm() {
               aria-valuenow={progress}
             >
               <div
-                className="h-full bg-emerald-600"
+                className="h-full bg-blue-600"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -405,7 +397,7 @@ export default function EraFeedbackForm() {
                   className={cx(
                     "px-3 py-1 rounded-full",
                     i === step
-                      ? "bg-emerald-600 text-white"
+                      ? "bg-blue-600 text-white"
                       : "bg-white border text-gray-600 hover:bg-gray-50"
                   )}
                   onClick={() => setStep(i)}
@@ -455,7 +447,7 @@ export default function EraFeedbackForm() {
                 className={cx(
                   "px-4 py-2 rounded-lg text-white",
                   validateStep()
-                    ? "bg-emerald-600 hover:bg-emerald-700"
+                    ? "bg-blue-600 hover:bg-blue-700"
                     : "bg-gray-300 cursor-not-allowed"
                 )}
                 disabled={!validateStep()}
@@ -469,7 +461,7 @@ export default function EraFeedbackForm() {
                 className={cx(
                   "px-4 py-2 rounded-lg text-white",
                   validateStep()
-                    ? "bg-emerald-600 hover:bg-emerald-700"
+                    ? "bg-blue-600 hover:bg-blue-700"
                     : "bg-gray-300 cursor-not-allowed"
                 )}
                 disabled={submitting}
@@ -811,7 +803,14 @@ function Section3({ likert, setLikert }) {
 }
 
 // ---------- Section 4 ----------
-function Section4({ problems, setProblems, suggestions, setSuggestions, additionalComment, setAdditionalComment }) {
+function Section4({
+  problems,
+  setProblems,
+  suggestions,
+  setSuggestions,
+  additionalComment,
+  setAdditionalComment,
+}) {
   const updateArray = (arr, setArr, idx, value) => {
     const next = [...arr];
     next[idx] = value;
