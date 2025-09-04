@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
+import { Link } from "react-router-dom";
 
 const genders = [
   { value: "male", label: "Male / ወንድ" },
@@ -359,9 +360,9 @@ export default function EraFeedbackForm() {
               className="h-10 w-10 object-contain"
             />
             <div>
-              <h1 className="text-lg font-semibold leading-tight">
+              <Link to="/" className="font-bold text-lg hover:underline">
                 ERA Feedback Portal / የግብር አገልግሎት መረጃ መሙያ
-              </h1>
+              </Link>
               <p className="text-xs text-gray-500">
                 Customer Satisfaction & Service Standards Survey
               </p>
