@@ -25,7 +25,6 @@ export default function AdminDashboard() {
       } catch (error) {
         console.error("Failed to fetch admin profile:", error);
         setError("Failed to load admin information");
-        // Redirect to login if not authenticated
         window.location.href = "/admin/login";
       } finally {
         setAdminLoading(false);

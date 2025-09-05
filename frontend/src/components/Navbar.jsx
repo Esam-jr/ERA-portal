@@ -18,7 +18,7 @@ export default function Navbar() {
               `px-3 py-1.5 rounded-lg border ${
                 isActive
                   ? "bg-emerald-50 text-blue-600 border-blue-200"
-                  : "bg-white hover:bg-gray-50"
+                  : "bg-white hover:bg-blue-700"
               }`
             }
           >
@@ -26,7 +26,7 @@ export default function Navbar() {
           </NavLink>
           <Link
             to="/admin/login"
-            className="px-4 py-2 rounded-lg bg-gray-900 text-white hover:bg-black"
+            className="px-4 py-2 rounded-lg bg-blue-900 text-white hover:bg-blue-950"
           >
             Admin
           </Link>

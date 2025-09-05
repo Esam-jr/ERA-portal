@@ -4,7 +4,7 @@ import Admin from "../models/admin.js";
 const { verify } = jwt;
 const JWT_SECRET = process.env.JWT_SECRET || "dev_jwt_secret_change_me";
 
-export function requireAuth(req, res, next) {
+export async function requireAuth(req, res, next) {
   try {
     const header = req.headers.authorization || "";
     const token =
@@ -12,7 +12,12 @@ export function requireAuth(req, res, next) {
       (header.startsWith("Bearer ") ? header.slice(7) : "");
     if (!token) return res.status(401).json({ error: "Unauthorized" });
     const payload = verify(token, JWT_SECRET);
-    req.adminId = payload.sub;
+    const admin = await Admin.findById(payload.sub).select("-password");
+
+    if (!admin) return res.status(401).json({ error: "Unauthorized" });
+
+    req.admin = admin;
+    req.data = { admin }; // For compatibility with existing code
     next();
   } catch (e) {
     return res.status(401).json({ error: "Unauthorized" });
@@ -21,10 +26,9 @@ export function requireAuth(req, res, next) {
 
 export const requireSuperAdmin = async (req, res, next) => {
   try {
-    if (!req.adminId) return res.status(401).json({ error: "Unauthorized" });
+    if (!req.admin) return res.status(401).json({ error: "Unauthorized" });
 
-    const admin = await Admin.findById(req.adminId);
-    if (!admin) return res.status(401).json({ error: "Unauthorized" });
+    const admin = req.admin;
 
     // we consider the first admin in DB as superadmin
     const firstAdmin = await Admin.findOne().sort({ createdAt: 1 });

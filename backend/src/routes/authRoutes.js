@@ -30,5 +30,8 @@ router.get("/list", requireAuth, requireSuperAdmin, getAdmins);
 
 router.delete("/:id", requireAuth, requireSuperAdmin, deleteAdmin);
 router.post("/logout", logout);
+router.get("/me", requireAuth, (req, res) => {
+  res.json({ success: true, admin: req.data.admin });
+});
 
 export default router;
