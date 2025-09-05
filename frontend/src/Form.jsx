@@ -298,11 +298,14 @@ export default function EraFeedbackForm() {
   const handleSubmit = async () => {
     setSubmitting(true);
     const payload = {
-      section1: gen,
-      section2: svc,
-      section3: likert,
-      section4: { problems, suggestions, additionalComment },
-      submittedAt: new Date().toISOString(),
+    section1: gen,
+    section2: svc,
+    // Map likert numeric values to objects expected by the API
+    section3: likert
+    .map((v) => (Number(v) > 0 ? { rating: Number(v) } : null))
+    .filter(Boolean),
+    section4: { problems, suggestions, additionalComment },
+    submittedAt: new Date().toISOString(),
     };
 
     try {

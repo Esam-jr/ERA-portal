@@ -1,215 +1,304 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+import React, { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
+import {
+  getServicesCatalog,
+  setServicesCatalog,
+  getTransparencyStatements,
+  setTransparencyStatements,
+  DEFAULT_SERVICES,
+  DEFAULT_STATEMENTS,
+} from "../utils/configStore";
 
-export default function DepartmentManagement({ currentAdmin }) {
-  const [departments, setDepartments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [formData, setFormData] = useState({
+export default function DepartmentManagement() {
+  // Section 2 — Services
+  const [services, setServices] = useState([]);
+  const [svcFilter, setSvcFilter] = useState("");
+  const [newService, setNewService] = useState({
     name: "",
-    description: "",
-    location: "",
-    manager: "",
+    amharic: "",
+    office: "",
+    standard: "",
   });
 
+  // Section 3 — Statements
+  const [statements, setStatements] = useState([]);
+  const [stmFilter, setStmFilter] = useState("");
+  const [newStatement, setNewStatement] = useState("");
+
+  // Load from storage
   useEffect(() => {
-    // For now, we'll use mock data since there's no department API
-    // In a real implementation, you would fetch from /api/departments
-    setTimeout(() => {
-      setDepartments([
-        {
-          _id: "1",
-          name: "Tax Collection",
-          description: "Handles tax collection and processing",
-          location: "Ground Floor",
-          manager: "John Doe",
-          createdAt: new Date().toISOString(),
-        },
-        {
-          _id: "2",
-          name: "Audit Services",
-          description: "Conducts tax audits and investigations",
-          location: "3rd Floor",
-          manager: "Jane Smith",
-          createdAt: new Date().toISOString(),
-        },
-        {
-          _id: "3",
-          name: "Customer Service",
-          description: "Provides customer support and information",
-          location: "1st Floor",
-          manager: "Mike Johnson",
-          createdAt: new Date().toISOString(),
-        },
-      ]);
-      setLoading(false);
-    }, 1000);
+    try {
+      setServices(getServicesCatalog());
+      setStatements(getTransparencyStatements());
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to load configuration");
+    }
   }, []);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      // Mock implementation - in real app, would POST to /api/departments
-      const newDepartment = {
-        _id: Date.now().toString(),
-        ...formData,
-        createdAt: new Date().toISOString(),
-      };
-      setDepartments([...departments, newDepartment]);
-      setShowAddForm(false);
-      setFormData({ name: "", description: "", location: "", manager: "" });
-      setError("");
-      toast.success("Department created successfully");
-    } catch (error) {
-      setError("Failed to add department");
-    }
+  // Derived lists with filtering
+  const filteredServices = useMemo(() => {
+    const q = svcFilter.trim().toLowerCase();
+    if (!q) return services;
+    return services.filter((s) =>
+      [s.name, s.amharic, s.office, s.standard]
+        .join(" ")
+        .toLowerCase()
+        .includes(q)
+    );
+  }, [services, svcFilter]);
+
+  const filteredStatements = useMemo(() => {
+    const q = stmFilter.trim().toLowerCase();
+    if (!q) return statements;
+    return statements.filter((s) => s.toLowerCase().includes(q));
+  }, [statements, stmFilter]);
+
+  // Handlers — Services
+  const handleAddService = () => {
+    const name = newService.name.trim();
+    if (!name) return toast.error("Service name is required");
+
+    const nextId = (services[services.length - 1]?.id || 0) + 1;
+    const svc = {
+      id: nextId,
+      name,
+      amharic: newService.amharic.trim(),
+      office: newService.office.trim(),
+      standard: newService.standard.trim(),
+    };
+
+    const next = [...services, svc];
+    setServices(next);
+    setServicesCatalog(next);
+    setNewService({ name: "", amharic: "", office: "", standard: "" });
+    toast.success("Service added");
   };
 
-  const handleDelete = async (departmentId) => {
-    if (!window.confirm("Are you sure you want to delete this department?")) return;
-
-    try {
-      // Mock implementation - in real app, would DELETE /api/departments/:id
-      setDepartments(departments.filter(dept => dept._id !== departmentId));
-      toast.success("Department deleted successfully");
-    } catch (error) {
-      setError("Failed to delete department");
-    }
+  const handleRemoveService = (id) => {
+    if (!window.confirm("Remove this service?")) return;
+    const next = services.filter((s) => s.id !== id);
+    setServices(next);
+    setServicesCatalog(next);
+    toast.success("Service removed");
   };
 
-  if (loading) return <div className="text-center py-8">Loading departments...</div>;
+  const handleResetServices = () => {
+    if (!window.confirm("Reset to default services?")) return;
+    setServices(DEFAULT_SERVICES);
+    setServicesCatalog(DEFAULT_SERVICES);
+    toast.success("Services reset to defaults");
+  };
+
+  // Handlers — Statements
+  const handleAddStatement = () => {
+    const value = newStatement.trim();
+    if (!value) return toast.error("Statement text is required");
+    const next = [...statements, value];
+    setStatements(next);
+    setTransparencyStatements(next);
+    setNewStatement("");
+    toast.success("Statement added");
+  };
+
+  const handleRemoveStatement = (idx) => {
+    if (!window.confirm("Remove this statement?")) return;
+    const next = statements.filter((_, i) => i !== idx);
+    setStatements(next);
+    setTransparencyStatements(next);
+    toast.success("Statement removed");
+  };
+
+  const handleResetStatements = () => {
+    if (!window.confirm("Reset to default statements?")) return;
+    setStatements(DEFAULT_STATEMENTS);
+    setTransparencyStatements(DEFAULT_STATEMENTS);
+    toast.success("Statements reset to defaults");
+  };
 
   return (
-    <div className="bg-white rounded-xl p-6 shadow-sm">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Department Management</h2>
-        <button
-          onClick={() => setShowAddForm(!showAddForm)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-        >
-          Add New Department
-        </button>
-      </div>
-
-      {error && (
-        <div className="bg-red-50 text-red-700 p-3 rounded-md mb-4">
-          {error}
+    <div className="space-y-8">
+      {/* Section 2: Services Catalog Management */}
+      <section className="bg-white rounded-xl shadow-sm border p-5">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+          <h2 className="text-xl font-semibold text-gray-800">Section 2 — Services Catalog</h2>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={svcFilter}
+              onChange={(e) => setSvcFilter(e.target.value)}
+              placeholder="Search services..."
+              className="border rounded-md px-3 py-2 w-64"
+            />
+            <button
+              onClick={handleResetServices}
+              className="border px-3 py-2 rounded-md hover:bg-gray-50"
+            >
+              Reset Defaults
+            </button>
+          </div>
         </div>
-      )}
 
-      {showAddForm && (
-        <form
-          onSubmit={handleSubmit}
-          className="bg-gray-50 p-4 rounded-md mb-6"
-        >
-          <h3 className="text-lg font-semibold mb-3">Add New Department</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-            <input
-              type="text"
-              placeholder="Department Name"
-              value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
-              className="p-2 border rounded-md"
-              required
-            />
-            <input
-              type="text"
-              placeholder="Manager Name"
-              value={formData.manager}
-              onChange={(e) =>
-                setFormData({ ...formData, manager: e.target.value })
-              }
-              className="p-2 border rounded-md"
-              required
-            />
-            <input
-              type="text"
-              placeholder="Location"
-              value={formData.location}
-              onChange={(e) =>
-                setFormData({ ...formData, location: e.target.value })
-              }
-              className="p-2 border rounded-md"
-              required
-            />
-            <textarea
-              placeholder="Description"
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-              className="p-2 border rounded-md md:col-span-1"
-              rows="3"
-            />
-          </div>
-          <div className="flex space-x-2">
-            <button
-              type="submit"
-              className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
-            >
-              Create Department
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowAddForm(false)}
-              className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-      )}
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {departments.map((department) => (
-          <div key={department._id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-            <div className="flex justify-between items-start mb-3">
-              <h3 className="text-lg font-semibold text-gray-800">{department.name}</h3>
+        <div className="grid md:grid-cols-2 gap-4">
+          {/* Add new service */}
+          <div className="border rounded-lg p-4">
+            <h3 className="font-medium mb-3">Add New Service</h3>
+            <div className="space-y-2">
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">Service Name (English)</label>
+                <input
+                  type="text"
+                  value={newService.name}
+                  onChange={(e) => setNewService({ ...newService, name: e.target.value })}
+                  className="w-full border rounded-md px-3 py-2"
+                  placeholder="e.g., Taxpayer registration"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">Service Name (Amharic)</label>
+                <input
+                  type="text"
+                  value={newService.amharic}
+                  onChange={(e) => setNewService({ ...newService, amharic: e.target.value })}
+                  className="w-full border rounded-md px-3 py-2"
+                  placeholder="የአማርኛ ስም"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Office</label>
+                  <input
+                    type="text"
+                    value={newService.office}
+                    onChange={(e) => setNewService({ ...newService, office: e.target.value })}
+                    className="w-full border rounded-md px-3 py-2"
+                    placeholder="e.g., 105"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Standard Time</label>
+                  <input
+                    type="text"
+                    value={newService.standard}
+                    onChange={(e) => setNewService({ ...newService, standard: e.target.value })}
+                    className="w-full border rounded-md px-3 py-2"
+                    placeholder="e.g., 30 min"
+                  />
+                </div>
+              </div>
               <button
-                onClick={() => handleDelete(department._id)}
-                className="text-red-600 hover:text-red-800 text-sm"
-                title="Delete Department"
+                onClick={handleAddService}
+                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
               >
-                🗑️
-              </button>
-            </div>
-            
-            <div className="space-y-2 text-sm text-gray-600">
-              <div>
-                <strong>Manager:</strong> {department.manager}
-              </div>
-              <div>
-                <strong>Location:</strong> {department.location}
-              </div>
-              <div>
-                <strong>Description:</strong> {department.description}
-              </div>
-              <div>
-                <strong>Created:</strong> {new Date(department.createdAt).toLocaleDateString()}
-              </div>
-            </div>
-
-            <div className="mt-4 flex space-x-2">
-              <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                Edit
-              </button>
-              <button className="text-green-600 hover:text-green-800 text-sm font-medium">
-                View Details
+                Add Service
               </button>
             </div>
           </div>
-        ))}
-      </div>
 
-      {departments.length === 0 && (
-        <div className="text-center py-12 bg-gray-50 rounded-lg">
-          <p className="text-gray-600">No departments found</p>
+          {/* Services list */}
+          <div className="border rounded-lg p-4">
+            <h3 className="font-medium mb-3">Current Services ({filteredServices.length})</h3>
+            <div className="max-h-[420px] overflow-auto divide-y">
+              {filteredServices.map((s) => (
+                <div key={s.id} className="py-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="font-medium text-gray-800">{s.id}. {s.name}</div>
+                      {s.amharic && (
+                        <div className="text-sm text-gray-600">{s.amharic}</div>
+                      )}
+                      <div className="text-xs text-gray-500">
+                        <span className="mr-3"><strong>Office:</strong> {s.office || "—"}</span>
+                        <span><strong>Standard:</strong> {s.standard || "—"}</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleRemoveService(s.id)}
+                      className="text-red-600 hover:text-red-800 text-sm"
+                      title="Remove"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {filteredServices.length === 0 && (
+                <div className="text-sm text-gray-500 py-4">No services match your filter</div>
+              )}
+            </div>
+          </div>
         </div>
-      )}
+      </section>
+
+      {/* Section 3: Transparency Statements Management */}
+      <section className="bg-white rounded-xl shadow-sm border p-5">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+          <h2 className="text-xl font-semibold text-gray-800">Section 3 — Transparency Statements</h2>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={stmFilter}
+              onChange={(e) => setStmFilter(e.target.value)}
+              placeholder="Search statements..."
+              className="border rounded-md px-3 py-2 w-64"
+            />
+            <button
+              onClick={handleResetStatements}
+              className="border px-3 py-2 rounded-md hover:bg-gray-50"
+            >
+              Reset Defaults
+            </button>
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          {/* Add new statement */}
+          <div className="border rounded-lg p-4">
+            <h3 className="font-medium mb-3">Add New Statement</h3>
+            <textarea
+              value={newStatement}
+              onChange={(e) => setNewStatement(e.target.value)}
+              rows={3}
+              className="w-full border rounded-md px-3 py-2"
+              placeholder="Write a new statement (Amharic and/or English)"
+            />
+            <div className="mt-2">
+              <button
+                onClick={handleAddStatement}
+                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+              >
+                Add Statement
+              </button>
+            </div>
+          </div>
+
+          {/* Statements list */}
+          <div className="border rounded-lg p-4">
+            <h3 className="font-medium mb-3">Current Statements ({filteredStatements.length})</h3>
+            <div className="max-h-[420px] overflow-auto divide-y">
+              {filteredStatements.map((st, idx) => (
+                <div key={idx} className="py-3 flex items-start justify-between gap-3">
+                  <div className="text-sm text-gray-800">{idx + 1}. {st}</div>
+                  <button
+                    onClick={() => handleRemoveStatement(idx)}
+                    className="text-red-600 hover:text-red-800 text-sm"
+                    title="Remove"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+              {filteredStatements.length === 0 && (
+                <div className="text-sm text-gray-500 py-4">No statements match your filter</div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 text-xs text-gray-500">
+          Changes are saved in the browser and will be used after integration in the form and reports. If you don't see updates in the form, refresh the page.
+        </div>
+      </section>
     </div>
   );
 }
