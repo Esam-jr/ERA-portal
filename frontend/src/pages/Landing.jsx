@@ -18,7 +18,8 @@ export default function Landing() {
 
         <div className="relative max-w-6xl mx-auto px-4 py-24 text-center">
           <h2 className="text-4xl md:text-5xl font-bold">
-            Ministry of Revenue Adama Branch / በኢትዮጵያ ገቢዎች ሚኒስቴር አዳማ ቅ/ፅ/ቤት
+            Ministry of Revenue / በኢትዮጵያ ገቢዎች ሚኒስቴር <br />
+            ቅ/ፅ/ቤት
           </h2>
           <p className="mt-4 text-lg max-w-3xl mx-auto">
             Help us improve tax services by sharing your experience. Your
