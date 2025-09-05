@@ -1,78 +1,96 @@
-// components/AdminManagement.jsx
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import toast from "react-hot-toast";
 
-export default function AdminManagement({ currentAdmin }) {
-  const [admins, setAdmins] = useState([]);
+export default function DepartmentManagement({ currentAdmin }) {
+  const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
-    email: "",
-    password: "",
-    role: "admin",
+    description: "",
+    location: "",
+    manager: "",
   });
 
   useEffect(() => {
-    fetchAdmins();
-  }, []);
-
-  const fetchAdmins = async () => {
-    try {
-      const response = await axios.get("/api/admin/admins", {
-        withCredentials: true,
-      });
-      setAdmins(response.data);
-    } catch (error) {
-      setError(error.response?.data?.error || "Failed to load admins");
-    } finally {
+    // For now, we'll use mock data since there's no department API
+    // In a real implementation, you would fetch from /api/departments
+    setTimeout(() => {
+      setDepartments([
+        {
+          _id: "1",
+          name: "Tax Collection",
+          description: "Handles tax collection and processing",
+          location: "Ground Floor",
+          manager: "John Doe",
+          createdAt: new Date().toISOString(),
+        },
+        {
+          _id: "2",
+          name: "Audit Services",
+          description: "Conducts tax audits and investigations",
+          location: "3rd Floor",
+          manager: "Jane Smith",
+          createdAt: new Date().toISOString(),
+        },
+        {
+          _id: "3",
+          name: "Customer Service",
+          description: "Provides customer support and information",
+          location: "1st Floor",
+          manager: "Mike Johnson",
+          createdAt: new Date().toISOString(),
+        },
+      ]);
       setLoading(false);
-    }
-  };
+    }, 1000);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("/api/admin/admins", formData, {
-        withCredentials: true,
-      });
+      // Mock implementation - in real app, would POST to /api/departments
+      const newDepartment = {
+        _id: Date.now().toString(),
+        ...formData,
+        createdAt: new Date().toISOString(),
+      };
+      setDepartments([...departments, newDepartment]);
       setShowAddForm(false);
-      setFormData({ name: "", email: "", password: "", role: "admin" });
-      fetchAdmins();
+      setFormData({ name: "", description: "", location: "", manager: "" });
       setError("");
+      toast.success("Department created successfully");
     } catch (error) {
-      setError(error.response?.data?.error || "Failed to add admin");
+      setError("Failed to add department");
     }
   };
 
-  const handleDelete = async (adminId) => {
-    if (!window.confirm("Are you sure you want to delete this admin?")) return;
+  const handleDelete = async (departmentId) => {
+    if (!window.confirm("Are you sure you want to delete this department?")) return;
 
     try {
-      await axios.delete(`/api/admin/admins/${adminId}`, {
-        withCredentials: true,
-      });
-      fetchAdmins();
+      // Mock implementation - in real app, would DELETE /api/departments/:id
+      setDepartments(departments.filter(dept => dept._id !== departmentId));
+      toast.success("Department deleted successfully");
     } catch (error) {
-      setError(error.response?.data?.error || "Failed to delete admin");
+      setError("Failed to delete department");
     }
   };
 
-  if (loading) return <div className="text-center py-8">Loading admins...</div>;
+  if (loading) return <div className="text-center py-8">Loading departments...</div>;
 
   return (
     <div className="bg-white rounded-xl p-6 shadow-sm">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Admin Management</h2>
-        {currentAdmin?.role === "superadmin" && (
-          <button
-            onClick={() => setShowAddForm(!showAddForm)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-          >
-            Add New Admin
-          </button>
-        )}
+        <h2 className="text-2xl font-bold text-gray-800">Department Management</h2>
+        <button
+          onClick={() => setShowAddForm(!showAddForm)}
+          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+        >
+          Add New Department
+        </button>
       </div>
 
       {error && (
@@ -86,11 +104,11 @@ export default function AdminManagement({ currentAdmin }) {
           onSubmit={handleSubmit}
           className="bg-gray-50 p-4 rounded-md mb-6"
         >
-          <h3 className="text-lg font-semibold mb-3">Add New Admin</h3>
+          <h3 className="text-lg font-semibold mb-3">Add New Department</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
             <input
               type="text"
-              placeholder="Full Name"
+              placeholder="Department Name"
               value={formData.name}
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
@@ -99,47 +117,46 @@ export default function AdminManagement({ currentAdmin }) {
               required
             />
             <input
-              type="email"
-              placeholder="Email"
-              value={formData.email}
+              type="text"
+              placeholder="Manager Name"
+              value={formData.manager}
               onChange={(e) =>
-                setFormData({ ...formData, email: e.target.value })
+                setFormData({ ...formData, manager: e.target.value })
               }
               className="p-2 border rounded-md"
               required
             />
             <input
-              type="password"
-              placeholder="Password"
-              value={formData.password}
+              type="text"
+              placeholder="Location"
+              value={formData.location}
               onChange={(e) =>
-                setFormData({ ...formData, password: e.target.value })
+                setFormData({ ...formData, location: e.target.value })
               }
               className="p-2 border rounded-md"
               required
             />
-            <select
-              value={formData.role}
+            <textarea
+              placeholder="Description"
+              value={formData.description}
               onChange={(e) =>
-                setFormData({ ...formData, role: e.target.value })
+                setFormData({ ...formData, description: e.target.value })
               }
-              className="p-2 border rounded-md"
-            >
-              <option value="admin">Admin</option>
-              <option value="superadmin">Super Admin</option>
-            </select>
+              className="p-2 border rounded-md md:col-span-1"
+              rows="3"
+            />
           </div>
           <div className="flex space-x-2">
             <button
               type="submit"
-              className="bg-green-600 text-white px-4 py-2 rounded-md"
+              className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
             >
-              Create Admin
+              Create Department
             </button>
             <button
               type="button"
               onClick={() => setShowAddForm(false)}
-              className="bg-gray-500 text-white px-4 py-2 rounded-md"
+              className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
             >
               Cancel
             </button>
@@ -147,54 +164,52 @@ export default function AdminManagement({ currentAdmin }) {
         </form>
       )}
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="text-left p-3">Name</th>
-              <th className="text-left p-3">Email</th>
-              <th className="text-left p-3">Role</th>
-              <th className="text-left p-3">Created</th>
-              {currentAdmin?.role === "superadmin" && (
-                <th className="text-left p-3">Actions</th>
-              )}
-            </tr>
-          </thead>
-          <tbody>
-            {admins.map((admin) => (
-              <tr key={admin._id} className="border-t hover:bg-gray-50">
-                <td className="p-3">{admin.name}</td>
-                <td className="p-3">{admin.email}</td>
-                <td className="p-3">
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs ${
-                      admin.role === "superadmin"
-                        ? "bg-purple-100 text-purple-800"
-                        : "bg-blue-100 text-blue-800"
-                    }`}
-                  >
-                    {admin.role}
-                  </span>
-                </td>
-                <td className="p-3">
-                  {new Date(admin.createdAt).toLocaleDateString()}
-                </td>
-                {currentAdmin?.role === "superadmin" &&
-                  admin.role !== "superadmin" && (
-                    <td className="p-3">
-                      <button
-                        onClick={() => handleDelete(admin._id)}
-                        className="text-red-600 hover:text-red-800 text-sm"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  )}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {departments.map((department) => (
+          <div key={department._id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+            <div className="flex justify-between items-start mb-3">
+              <h3 className="text-lg font-semibold text-gray-800">{department.name}</h3>
+              <button
+                onClick={() => handleDelete(department._id)}
+                className="text-red-600 hover:text-red-800 text-sm"
+                title="Delete Department"
+              >
+                🗑️
+              </button>
+            </div>
+            
+            <div className="space-y-2 text-sm text-gray-600">
+              <div>
+                <strong>Manager:</strong> {department.manager}
+              </div>
+              <div>
+                <strong>Location:</strong> {department.location}
+              </div>
+              <div>
+                <strong>Description:</strong> {department.description}
+              </div>
+              <div>
+                <strong>Created:</strong> {new Date(department.createdAt).toLocaleDateString()}
+              </div>
+            </div>
+
+            <div className="mt-4 flex space-x-2">
+              <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                Edit
+              </button>
+              <button className="text-green-600 hover:text-green-800 text-sm font-medium">
+                View Details
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
+
+      {departments.length === 0 && (
+        <div className="text-center py-12 bg-gray-50 rounded-lg">
+          <p className="text-gray-600">No departments found</p>
+        </div>
+      )}
     </div>
   );
 }

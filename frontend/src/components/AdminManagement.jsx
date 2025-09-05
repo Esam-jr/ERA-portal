@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import toast from "react-hot-toast";
 
 export default function AdminManagement({ currentAdmin }) {
   const [admins, setAdmins] = useState([]);
@@ -10,7 +11,6 @@ export default function AdminManagement({ currentAdmin }) {
     name: "",
     email: "",
     password: "",
-    role: "admin",
   });
 
   useEffect(() => {
@@ -19,10 +19,13 @@ export default function AdminManagement({ currentAdmin }) {
 
   const fetchAdmins = async () => {
     try {
-      const response = await axios.get("/api/admin/admins", {
+      const response = await axios.get("/api/auth/list", {
         withCredentials: true,
       });
-      setAdmins(response.data);
+      const adminsList = response.data.admins || [];
+      // Sort by creation date to identify the first admin (super admin)
+      const sortedAdmins = adminsList.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+      setAdmins(sortedAdmins);
     } catch (error) {
       setError(error.response?.data?.error || "Failed to load admins");
     } finally {
@@ -30,16 +33,27 @@ export default function AdminManagement({ currentAdmin }) {
     }
   };
 
+  // Helper function to check if an admin is super admin (first created)
+  const isSuperAdmin = (admin) => {
+    if (admins.length === 0) return false;
+    const firstAdmin = admins[0];
+    return admin._id === firstAdmin._id;
+  };
+
+  // Check if current admin is super admin
+  const isCurrentAdminSuper = currentAdmin && isSuperAdmin(currentAdmin);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("/api/admin/admins", formData, {
+      await axios.post("/api/auth/create", formData, {
         withCredentials: true,
       });
       setShowAddForm(false);
-      setFormData({ name: "", email: "", password: "", role: "admin" });
+      setFormData({ name: "", email: "", password: "" });
       fetchAdmins();
       setError("");
+      toast.success("Admin created successfully");
     } catch (error) {
       setError(error.response?.data?.error || "Failed to add admin");
     }
@@ -49,10 +63,11 @@ export default function AdminManagement({ currentAdmin }) {
     if (!window.confirm("Are you sure you want to delete this admin?")) return;
 
     try {
-      await axios.delete(`/api/admin/admins/${adminId}`, {
+      await axios.delete(`/api/auth/${adminId}`, {
         withCredentials: true,
       });
       fetchAdmins();
+      toast.success("Admin deleted successfully");
     } catch (error) {
       setError(error.response?.data?.error || "Failed to delete admin");
     }
@@ -64,7 +79,7 @@ export default function AdminManagement({ currentAdmin }) {
     <div className="bg-white rounded-xl p-6 shadow-sm">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Admin Management</h2>
-        {currentAdmin?.role === "superadmin" && (
+        {isCurrentAdminSuper && (
           <button
             onClick={() => setShowAddForm(!showAddForm)}
             className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
@@ -86,7 +101,7 @@ export default function AdminManagement({ currentAdmin }) {
           className="bg-gray-50 p-4 rounded-md mb-6"
         >
           <h3 className="text-lg font-semibold mb-3">Add New Admin</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
             <input
               type="text"
               placeholder="Full Name"
@@ -117,16 +132,6 @@ export default function AdminManagement({ currentAdmin }) {
               className="p-2 border rounded-md"
               required
             />
-            <select
-              value={formData.role}
-              onChange={(e) =>
-                setFormData({ ...formData, role: e.target.value })
-              }
-              className="p-2 border rounded-md"
-            >
-              <option value="admin">Admin</option>
-              <option value="superadmin">Super Admin</option>
-            </select>
           </div>
           <div className="flex space-x-2">
             <button
@@ -154,7 +159,7 @@ export default function AdminManagement({ currentAdmin }) {
               <th className="text-left p-3">Email</th>
               <th className="text-left p-3">Role</th>
               <th className="text-left p-3">Created</th>
-              {currentAdmin?.role === "superadmin" && (
+              {isCurrentAdminSuper && (
                 <th className="text-left p-3">Actions</th>
               )}
             </tr>
@@ -167,28 +172,27 @@ export default function AdminManagement({ currentAdmin }) {
                 <td className="p-3">
                   <span
                     className={`px-2 py-1 rounded-full text-xs ${
-                      admin.role === "superadmin"
+                      isSuperAdmin(admin)
                         ? "bg-purple-100 text-purple-800"
                         : "bg-blue-100 text-blue-800"
                     }`}
                   >
-                    {admin.role}
+                    {isSuperAdmin(admin) ? "Super Admin" : "Admin"}
                   </span>
                 </td>
                 <td className="p-3">
                   {new Date(admin.createdAt).toLocaleDateString()}
                 </td>
-                {currentAdmin?.role === "superadmin" &&
-                  admin.role !== "superadmin" && (
-                    <td className="p-3">
-                      <button
-                        onClick={() => handleDelete(admin._id)}
-                        className="text-red-600 hover:text-red-800 text-sm"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  )}
+                {isCurrentAdminSuper && !isSuperAdmin(admin) && (
+                  <td className="p-3">
+                    <button
+                      onClick={() => handleDelete(admin._id)}
+                      className="text-red-600 hover:text-red-800 text-sm"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

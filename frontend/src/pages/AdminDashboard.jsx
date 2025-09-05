@@ -21,7 +21,7 @@ export default function AdminDashboard() {
         const response = await axios.get("/api/auth/me", {
           withCredentials: true,
         });
-        setAdmin(response.data.user);
+        setAdmin(response.data.admin);
       } catch (error) {
         console.error("Failed to fetch admin profile:", error);
         setError("Failed to load admin information");
@@ -34,20 +34,23 @@ export default function AdminDashboard() {
     fetchAdminProfile();
   }, []);
 
-  useEffect(() => {
-    const fetchFeedback = async () => {
-      try {
-        const response = await axios.get(`/api/feedback?page=1&limit=50`, {
-          withCredentials: true,
-        });
-        setItems(response.data.items || response.data || []);
-      } catch (error) {
-        setError(error.response?.data?.error || "Failed to load feedback");
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchFeedback = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`/api/feedback/list?page=1&limit=50`, {
+        withCredentials: true,
+      });
+      setItems(response.data.items || []);
+      setError("");
+    } catch (error) {
+      setError(error.response?.data?.error || "Failed to load feedback");
+      setItems([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     if (activeTab === "Feedbacks") {
       fetchFeedback();
     }
@@ -78,7 +81,7 @@ export default function AdminDashboard() {
               </h2>
               <ExportButtons data={items} admin={admin} />
             </div>
-            <FeedbackTable data={items} loading={loading} admin={admin} />
+            <FeedbackTable data={items} loading={loading} admin={admin} onDataChange={fetchFeedback} />
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mt-4">
                 {error}
